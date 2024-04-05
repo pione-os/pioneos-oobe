@@ -5,9 +5,13 @@ dist: build
 	dotnet publish ./oobe.csproj -c Release -o dist -r linux-x64 --self-contained true
 	rm -rf app
 	mkdir app
-	cp -r ./src/* app/
-	cp ./dist/oobe app/etc/pioneos/oobe
-
+	mkdir app/usr
+	mkdir app/usr/bin
+	mkdir app/DEBIAN
+	cp src/usr/bin/startoobe app/usr/bin/
+	cp -r src/* app/
+	cp -r src/DEBIAN app/
+	cp dist/oobe app/etc/pioneos/oobe
 	chmod +x app/DEBIAN/postinst
 	chmod +x app/DEBIAN/prerm
 
