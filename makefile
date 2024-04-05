@@ -10,7 +10,6 @@ dist: build
 	mkdir app/DEBIAN
 	cp -r src/* app/
 	cp -r src/DEBIAN app/
-	cp src/usr/bin/startoobe app/usr/bin/
 	cp dist/oobe app/etc/pioneos/oobe
 	chmod +x app/DEBIAN/postinst
 	chmod +x app/DEBIAN/prerm
