@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Reboot to Windows
+Name[ja]=Windows へ再起動
+Comment[ja]=grub-reboot を利用して Windows へ再起動します。
+Exec=/bin/rebootwin
+Icon=distributor-logo-windows
+Path=
+Terminal=true
+StartupNotify=false
+Categories=ConsoleOnly;Utility;System;

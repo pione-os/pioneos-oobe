@@ -1,0 +1,8 @@
+Package: pioneos-oobe
+Version: 1.0-8
+Section: base
+Priority: optional
+Architecture: amd64
+#Depends: 
+Maintainer: budobudou <email@address.com>
+Description: PioneOS OOBE
