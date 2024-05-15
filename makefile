@@ -2,7 +2,6 @@ build:
 	dotnet publish ./oobe.csproj -c Release -o dist -r linux-x64 --self-contained true
 
 dist: build
-	dotnet publish ./oobe.csproj -c Release -o dist -r linux-x64 --self-contained true
 	rm -rf app
 	mkdir app
 	mkdir app/usr
