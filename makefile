@@ -6,6 +6,9 @@ dist: build
 	mkdir app
 	mkdir app/usr
 	mkdir app/usr/bin
+	mkdir app/usr/share
+	mkdir app/usr/share/pioneos
+	mkdir app/usr/share/pioneos/oobe
 	mkdir app/DEBIAN
 	cp -r src/. app/
 	cp -r src/DEBIAN app/
