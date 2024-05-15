@@ -1,5 +1,5 @@
 #!/bin/sh
 
 set -e
-rm -rf /etc/pioneos/oobe/
+rm -rf /usr/share/pioneos/oobe/
 exit 0

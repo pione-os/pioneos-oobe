@@ -1,6 +1,8 @@
 #!/bin/sh
 
 set -e 
-chmod -R 4755 /etc/pioneos/oobe
+chmod -R 4755 /usr/share/pioneos/oobe
+chown -R root:root /usr/share/pioneos/oobe
 chmod 4755 /usr/bin/startoobe
+chown root:root /usr/bin/startoobe
 exit 0

@@ -1,4 +1,4 @@
 #!/bin/bash
 pkill xfdesktop
 xfconf-query -c xfce4-session -p /general/SaveOnExit -n -t bool -s false
-/etc/pioneos/oobe/oobe &
+/usr/share/pioneos/oobe/oobe &

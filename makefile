@@ -10,12 +10,12 @@ dist: build
 	mkdir app/DEBIAN
 	cp -r src/. app/
 	cp -r src/DEBIAN app/
-	cp dist/oobe app/etc/pioneos/oobe
+	cp dist/oobe app/usr/share/pioneos/oobe
 	chmod +x app/DEBIAN/postinst
 	chmod +x app/DEBIAN/prerm
 
 	dpkg-deb --build app
-	mv app.deb ./pioneos-oobe_1.0-9_amd64.deb
+	mv app.deb ./pioneos-oobe_1.0-11_amd64.deb
 	rm -rf app
 	rm -rf dist
 	rm -rf bin

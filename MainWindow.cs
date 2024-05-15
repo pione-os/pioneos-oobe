@@ -63,14 +63,14 @@ namespace oobe
                 _navi_install.Visible = true;
                 _liveinfolabel.Visible = true;
                 _liveinfolabel.Text = "こんにちは、何をしたいですか？";
-                var image = new Gdk.Pixbuf("/etc/pioneos/oobe/Assets/pioneos.png",48,48);
+                var image = new Gdk.Pixbuf("/usr/share/pioneos/oobe/Assets/pioneos.png",48,48);
                 _live_icon.Pixbuf = image;
                 _calamares.Clicked += _calamares_Clicked;
                 _liveenv.Clicked += _liveenv_Clicked;
                 _window_info.Clicked += _window_info_Clicked; 
                 Console.WriteLine("Live 環境です");
                 _thum.Visible = false;
-                //_thum.File = "/etc/pioneos/oobe/Assets/pioneos.png";
+                //_thum.File = "/usr/share/pioneos/oobe/Assets/pioneos.png";
             }
             else{
                 Console.WriteLine("非 Live 環境です");
@@ -85,7 +85,7 @@ namespace oobe
                 _liveinfolabel.Visible = false;
                 _live_icon.Visible = false;
                 _window_info.Visible = false;
-                _thum.File = "/etc/pioneos/oobe/Assets/pioneos.png";
+                _thum.File = "/usr/share/pioneos/oobe/Assets/pioneos.png";
             }
             this.Decorated = false;
             this.DeleteEvent += (o, args) => args.RetVal = true;
@@ -133,11 +133,11 @@ namespace oobe
         {
             //if (_state == 4){
             //    if (toggleswitch.Active == true){
-            //        _thum.File = "/etc/pioneos/oobe/Assets/usernameoff.png";
+            //        _thum.File = "/usr/share/pioneos/oobe/Assets/usernameoff.png";
             //        loginview = false;
             //    }
             //    else{
-            //        _thum.File = "/etc/pioneos/oobe/Assets/usernameon.png";
+            //        _thum.File = "/usr/share/pioneos/oobe/Assets/usernameon.png";
             //        loginview = true;
             //    }}
             if (_state == 4){
@@ -185,7 +185,7 @@ namespace oobe
                 FileName = "sudo",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
-                Arguments = "/etc/pioneos/oobe/livetodesktop.sh"
+                Arguments = "/usr/share/pioneos/oobe/livetodesktop.sh"
             };
             _progresscircle.Visible = true;
             _navi_install.Visible = false;
@@ -197,7 +197,7 @@ namespace oobe
         {
             AboutDialog aboutdialog = new AboutDialog();
             aboutdialog.ProgramName = "PioneOS Setup";
-            byte[] epreview = File.ReadAllBytes("/etc/pioneos/oobe/Assets/pioneos.png");
+            byte[] epreview = File.ReadAllBytes("/usr/share/pioneos/oobe/Assets/pioneos.png");
             var image = new Gdk.Pixbuf(epreview,128,128);
             aboutdialog.Logo = image;
             aboutdialog.Title = "PioneOS Setup";
@@ -215,7 +215,7 @@ namespace oobe
             if (_state == 0){
                 _label1.Text = "このプロセスでは PioneOS  を設定するお手伝いをします。\n続けるには「次へ」をクリックしてください。";
                 _label2.Text = "Welcome to PioneOS!";
-                _thum.File = "/etc/pioneos/oobe/Assets/pioneos.png";
+                _thum.File = "/usr/share/pioneos/oobe/Assets/pioneos.png";
                 _infomationbar.Visible = true;
                 _pionever.Visible = true;
                 _bypass_network++;
@@ -243,12 +243,12 @@ namespace oobe
                 _label2.Text = "１．インターネットへの接続";
                 _button1.Label = "接続を確認＞";
                 _button2.Label = "＜戻る";
-                _thum.File = "/etc/pioneos/oobe/Assets/network.png";
+                _thum.File = "/usr/share/pioneos/oobe/Assets/network.png";
                 _pionever.Visible = false;
             }
             else if (_state == 2){
                 _navigationbar.Visible = false;
-                _thum.File = "/etc/pioneos/oobe/Assets/internet.png";
+                _thum.File = "/usr/share/pioneos/oobe/Assets/internet.png";
                 _label1.Text = "インターネット接続を確認中です。\nしばらくお待ちください。";
                 await Task.Delay(1500);
                 try{
@@ -342,7 +342,7 @@ namespace oobe
                 _thum.Visible = true;
                 _label1.Text = "これで、初期設定が完了しました！\nPioneOS を快適にご利用いただくために\n最終処理を行っていますので\n再起動するまで絶対にデバイスに触れないでください！";
                 _label2.Text = "自動で再起動するまでお待ちください！";
-                var image = new Gdk.Pixbuf("/etc/pioneos/oobe/Assets/pioneos.png");
+                var image = new Gdk.Pixbuf("/usr/share/pioneos/oobe/Assets/pioneos.png");
                 _thum.Pixbuf = image;
                 StartProgressBarAnimation(_progress);
             
@@ -352,7 +352,7 @@ namespace oobe
                 {
                     FileName = "sudo",
                     UseShellExecute = false,
-                    Arguments = "/etc/pioneos/oobe/windowstimesync.sh",
+                    Arguments = "/usr/share/pioneos/oobe/windowstimesync.sh",
                     RedirectStandardOutput = true,
                 };
                 Process.Start(processInfo_windowstimesync);
@@ -360,7 +360,7 @@ namespace oobe
             Console.WriteLine("fini2.sh を実行します。");
             var process2Info = new ProcessStartInfo
             {
-                FileName = "/etc/pioneos/oobe/fini2.sh",
+                FileName = "/usr/share/pioneos/oobe/fini2.sh",
                 UseShellExecute = false,
                 RedirectStandardOutput = true
             };
@@ -370,7 +370,7 @@ namespace oobe
             {
                 FileName = "sudo",
                 UseShellExecute = false,
-                Arguments = "/etc/pioneos/oobe/fini.sh",
+                Arguments = "/usr/share/pioneos/oobe/fini.sh",
                 RedirectStandardOutput = true
             };
             Process.Start(processInfo);
