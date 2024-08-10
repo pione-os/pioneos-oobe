@@ -14,7 +14,7 @@ dist: build
 	chmod +x app/DEBIAN/prerm
 
 	dpkg-deb --build app
-	mv app.deb ./pioneos-oobe_1.0-11_amd64.deb
+	mv app.deb ./pioneos-oobe_1.0-13_amd64.deb
 	rm -rf app
 	rm -rf dist
 	rm -rf bin

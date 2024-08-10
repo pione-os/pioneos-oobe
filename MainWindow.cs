@@ -14,6 +14,7 @@ namespace oobe
         [UI] private Image _thum = null;
         [UI] private Image _live_icon = null;
         [UI] private ProgressBar _progress = null;
+        [UI] private Box maingtkbox = null;
         [UI] private TextView eulaview = null;
         [UI] private ScrolledWindow windoweulaview = null;
         [UI] private CheckButton toggleswitch = null;
@@ -45,7 +46,7 @@ namespace oobe
                 _pionever.Text = prettyName;
             // CSS Apply
                 var provider = new CssProvider();
-                var cssdata = "._navi_install {    background-color: #E0E0E0;    border-radius: 10px;    padding: 10px 10px 10px 10px;}._navigationbar{    background-color: #E0E0E0;    padding: 5px 5px 5px 5px;}._tougoubutton{    border-radius: 10px;}";
+                var cssdata = "._navi_install {    background-color: #E0E0E0;       padding: 10px 10px 10px 10px;}._navigationbar{    background-color: #E0E0E0;    padding: 5px 5px 5px 5px}";
                 provider.LoadFromData(cssdata);
                 StyleContext.AddProviderForScreen(Gdk.Screen.Default, provider, 800); 
             // Live 環境かどうかのチェック
@@ -117,7 +118,14 @@ namespace oobe
 
         private void Window_DeleteEvent(object sender, DeleteEventArgs a)
         {
-            Application.Quit();
+            if (_state <= 4)
+            {
+                Dialog dialog = new MessageDialog(this, DialogFlags.Modal, MessageType.Error, ButtonsType.Ok, "このウィンドウは閉じれません。\nウィンドウを切り替えるには Alt + Tab を押します。");
+                dialog.Run();
+                dialog.Destroy();
+                a.RetVal = true;
+            }
+
         }
         private async void Button1_Clicked(object sender, EventArgs a)
         {
@@ -167,12 +175,18 @@ namespace oobe
             _navi_install.Visible = false;
             _window_info.Visible = false;
             await Task.Delay(5);
-            var pwatch = Process.Start(processInfo_calamares);
-            pwatch.WaitForExit();
+            using (Process pwatch = Process.Start(processInfo_calamares))
+            {
+                if (pwatch != null)
+                {
+                    await pwatch.WaitForExitAsync();
+                }
+            }
             _progresscircle.Visible = false;
             _navi_install.Visible = true;
             _window_info.Visible = true;
             Console.WriteLine("end"); 
+            Application.Invoke(delegate {Deiconify();});
         } 
         private async void _liveenv_Clicked(object sender,EventArgs a)
         {
@@ -204,7 +218,7 @@ namespace oobe
             aboutdialog.Comments = "PioneOS をセットアップするソフトウェアです。";
             aboutdialog.Copyright = "(C)2024 PioneOS Group";
             aboutdialog.Authors = new string[] { "Budobudou" };
-            aboutdialog.License = "this software uses gtksharp";
+//            aboutdialog.License = "this software uses gtksharp";
             aboutdialog.Run();
             aboutdialog.ShowAll();
             aboutdialog.Destroy();
@@ -250,7 +264,7 @@ namespace oobe
                 _navigationbar.Visible = false;
                 _thum.File = "/usr/share/pioneos/oobe/Assets/internet.png";
                 _label1.Text = "インターネット接続を確認中です。\nしばらくお待ちください。";
-                await Task.Delay(1500);
+                await Task.Delay(100);
                 try{
                     var connectcheck = new HttpClient();
                     await connectcheck.GetAsync("http://ospio.net");
@@ -344,7 +358,7 @@ namespace oobe
                 _label2.Text = "自動で再起動するまでお待ちください！";
                 var image = new Gdk.Pixbuf("/usr/share/pioneos/oobe/Assets/pioneos.png");
                 _thum.Pixbuf = image;
-                StartProgressBarAnimation(_progress);
+                await Task.Run(() => StartProgressBarAnimation(_progress));
             
             if (windowstimesync == true){
                 Console.WriteLine("windowstimesync.sh を実行します。");
@@ -374,32 +388,33 @@ namespace oobe
                 RedirectStandardOutput = true
             };
             Process.Start(processInfo);
-
-                static void StartProgressBarAnimation(ProgressBar _progress)
-                {
-                    int animationInterval = 60;
-                    Timer? timer = null;
-                    bool increasing = true;
-                    timer = new Timer((state) =>
-                    {
-                        double newFraction;
-                        if (increasing)
-                        {
-                            newFraction = _progress.Fraction + 0.012;
-                        }
-                        else
-                        {
-                            newFraction = _progress.Fraction - 0.012;
-                        }
-                        if (newFraction >= 1.0 || newFraction <= 0.0)
-                        {
-                            newFraction = 0.0;
-                        }
-                        Application.Invoke((sender, e) =>
-                        {
-                            _progress.Fraction = newFraction;
-                        });
-                    }, null, 0, animationInterval);
-                }
             }
-}}}
+            static void StartProgressBarAnimation(ProgressBar _progress)
+            {
+                int animationInterval = 60;
+                Timer? timer = null;
+                bool increasing = true;
+                timer = new Timer((state) =>
+                {
+                    double newFraction;
+                    if (increasing)
+                    {
+                        newFraction = _progress.Fraction + 0.012;
+                    }
+                    else
+                    {
+                        newFraction = _progress.Fraction - 0.012;
+                    }
+                    if (newFraction >= 1.0 || newFraction <= 0.0)
+                    {
+                        newFraction = 0.0;
+                    }
+                    Application.Invoke((sender, e) =>
+                    {
+                        _progress.Fraction = newFraction;
+                    });
+                }, null, 0, animationInterval);
+            }
+        }
+    }
+}

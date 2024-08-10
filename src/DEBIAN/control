@@ -1,5 +1,5 @@
 Package: pioneos-oobe
-Version: 1.0-11
+Version: 1.0-13
 Section: base
 Priority: optional
 Architecture: amd64
