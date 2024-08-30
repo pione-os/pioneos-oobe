@@ -48,8 +48,7 @@ namespace oobe
                 // OSバージョンの確認
                 string[] lines = File.ReadAllLines("/etc/os-release");
                 string prettyNameLine = lines.FirstOrDefault(line => line.StartsWith("VERSION="));
-                string prettyName = prettyNameLine.Split('=')[1].Trim('"');
-                _pionever.Text = prettyName;
+                _pionever.Text = "ver." + prettyNameLine.Split('=')[1].Trim('"');
             // CSS Apply
                 var provider = new CssProvider();
                 var cssdata = "._navi_install {    background-color: #E0E0E0;       padding: 10px 10px 10px 10px;}._navigationbar{    background-color: #E0E0E0;    padding: 5px 5px 5px 5px} .border{    padding: 1px 0px 1px 0px} ";
@@ -427,6 +426,9 @@ namespace oobe
                 _progress.Visible = true;
                 packagelistbox.Visible = false;          
                 _navigationbar.Visible = false;
+                _infomationbar.Visible = true;
+                _pionever.Visible = true;
+                _window_info.Visible = false;
                 _thum.Visible = true;
                 // アイコン設定
                 _live_icon.IconName = "checkmark";
@@ -445,7 +447,8 @@ namespace oobe
                     Arguments = "/usr/share/pioneos/oobe/apt-get.sh",
                     RedirectStandardOutput = true
                 };
-                Process.Start(processInfo3);
+                _pionever.Text = "進捗状況：Debian システムの更新中...";
+                using (Process pwatch = Process.Start(processInfo3)){if (pwatch != null){await pwatch.WaitForExitAsync();}}
                 //パッケージのインストール
                 if(texteditorcombo.Active == 0)
                 {
@@ -469,12 +472,14 @@ namespace oobe
                                 UseShellExecute = true,
                                 Arguments = "/usr/share/pioneos/oobe/instremo.sh" + " " + packageinstall + " " + packageuninstall
                             };
-                            Process.Start(processInfo_textedit);
+                            _pionever.Text = "進捗状況：必要なパッケージのインストール中...";
+                            using (Process pwatch = Process.Start(processInfo_textedit)){if (pwatch != null){await pwatch.WaitForExitAsync();}}
                             Console.WriteLine(packageinstall + "をインストールしました。");
                         }
                     }
                 }
             //時間同期など
+            _pionever.Text = "進捗状況：設定の最適化中...";
             if (windowstimesync == true){
                 Console.WriteLine("windowstimesync.sh を実行します。");
                 await Task.Delay(50);
@@ -485,7 +490,7 @@ namespace oobe
                     Arguments = "/usr/share/pioneos/oobe/windowstimesync.sh",
                     RedirectStandardOutput = true,
                 };
-                Process.Start(processInfo_windowstimesync);
+                using (Process pwatch = Process.Start(processInfo_windowstimesync)){if (pwatch != null){await pwatch.WaitForExitAsync();}}
             }
             //最終処理、ここでサヨナラ
             Console.WriteLine("fini2.sh を実行します。");
@@ -496,7 +501,7 @@ namespace oobe
                 RedirectStandardOutput = true
             };
             Console.WriteLine("fini.sh を実行します。");
-            Process.Start(process2Info);
+            using (Process pwatch = Process.Start(process2Info)){if (pwatch != null){await pwatch.WaitForExitAsync();}}
             await Task.Delay(50);
             var processInfo = new ProcessStartInfo
             {
@@ -505,7 +510,7 @@ namespace oobe
                 Arguments = "/usr/share/pioneos/oobe/fini.sh",
                 RedirectStandardOutput = true
             };
-            Process.Start(processInfo);
+            using (Process pwatch = Process.Start(processInfo)){if (pwatch != null){await pwatch.WaitForExitAsync();}}
             }
             static void StartProgressBarAnimation(ProgressBar _progress)
             {
