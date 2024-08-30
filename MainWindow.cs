@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using Gtk;
 using UI = Gtk.Builder.ObjectAttribute;
+using System.Xml.Linq;
 namespace oobe
 {
     public class MainWindow : Window
@@ -13,8 +14,10 @@ namespace oobe
         [UI] private Button _button2 = null;
         [UI] private Image _thum = null;
         [UI] private Image _live_icon = null;
+        [UI] private Image texteditoricon = null;
         [UI] private ProgressBar _progress = null;
-        [UI] private Box maingtkbox = null;
+        [UI] private Box packagelistbox = null;
+        [UI] private ComboBoxText texteditorcombo = null;
         [UI] private TextView eulaview = null;
         [UI] private ScrolledWindow windoweulaview = null;
         [UI] private CheckButton toggleswitch = null;
@@ -29,9 +32,12 @@ namespace oobe
         private int _state = 0;
         private bool loginview = false;
         private bool windowstimesync = false;
-        private string eulakekka = "";
+        private bool packagelisted = false;
         private int _bypass_network = 0;
         private int eulaviewed = 0;
+        // インストールするパッケージの指定用変数
+        private XElement texteditorlistroot = null!;
+        //
         public MainWindow() : this(new Builder("MainWindow.glade")) { }
         
         private MainWindow(Builder builder) : base(builder.GetRawOwnedObject("MainWindow"))
@@ -46,7 +52,7 @@ namespace oobe
                 _pionever.Text = prettyName;
             // CSS Apply
                 var provider = new CssProvider();
-                var cssdata = "._navi_install {    background-color: #E0E0E0;       padding: 10px 10px 10px 10px;}._navigationbar{    background-color: #E0E0E0;    padding: 5px 5px 5px 5px}";
+                var cssdata = "._navi_install {    background-color: #E0E0E0;       padding: 10px 10px 10px 10px;}._navigationbar{    background-color: #E0E0E0;    padding: 5px 5px 5px 5px} .border{    padding: 1px 0px 1px 0px} ";
                 provider.LoadFromData(cssdata);
                 StyleContext.AddProviderForScreen(Gdk.Screen.Default, provider, 800); 
             // Live 環境かどうかのチェック
@@ -63,6 +69,7 @@ namespace oobe
                 _progresscircle.Visible = false;
                 _navi_install.Visible = true;
                 _liveinfolabel.Visible = true;
+                packagelistbox.Visible = false;
                 _liveinfolabel.Text = "こんにちは、何をしたいですか？";
                 var image = new Gdk.Pixbuf("/usr/share/pioneos/oobe/Assets/pioneos.png",48,48);
                 _live_icon.Pixbuf = image;
@@ -84,8 +91,9 @@ namespace oobe
                 _progresscircle.Visible = false;
                 _navi_install.Visible = false;
                 _liveinfolabel.Visible = false;
-                _live_icon.Visible = false;
+                _live_icon.Visible = true;
                 _window_info.Visible = false;
+                packagelistbox.Visible = false;
                 _thum.File = "/usr/share/pioneos/oobe/Assets/pioneos.png";
             }
             this.Decorated = false;
@@ -163,7 +171,7 @@ namespace oobe
             _progresscircle.Visible = true;
             _navi_install.Visible = false;
             _window_info.Visible = false;
-            await Task.Delay(5);
+            await Task.Delay(2);
             var processInfo_calamares = new ProcessStartInfo
             {
                 FileName = "sudo",
@@ -174,7 +182,7 @@ namespace oobe
             _progresscircle.Visible = true;
             _navi_install.Visible = false;
             _window_info.Visible = false;
-            await Task.Delay(5);
+            await Task.Delay(2);
             using (Process pwatch = Process.Start(processInfo_calamares))
             {
                 if (pwatch != null)
@@ -193,7 +201,7 @@ namespace oobe
             _progresscircle.Visible = true;
             _navi_install.Visible = false;
             _window_info.Visible = false;
-            await Task.Delay(5);
+            await Task.Delay(2);
             var processInfo_calamares = new ProcessStartInfo
             {
                 FileName = "sudo",
@@ -204,7 +212,7 @@ namespace oobe
             _progresscircle.Visible = true;
             _navi_install.Visible = false;
             _window_info.Visible = false;
-            await Task.Delay(5);
+            await Task.Delay(2);
             Process.Start(processInfo_calamares);
         } 
         private async void _window_info_Clicked(object sender, EventArgs a)
@@ -227,10 +235,15 @@ namespace oobe
         {
             Console.WriteLine(_state);
             if (_state == 0){
-                _label1.Text = "このプロセスでは PioneOS  を設定するお手伝いをします。\n続けるには「次へ」をクリックしてください。";
                 _label2.Text = "Welcome to PioneOS!";
+                _label1.Text = "このプロセスでは PioneOS  を設定するお手伝いをします。\n続けるには「次へ」をクリックしてください。";
                 _thum.File = "/usr/share/pioneos/oobe/Assets/pioneos.png";
                 _infomationbar.Visible = true;
+                // アイコン設定
+                _live_icon.IconName = "face-smile";
+                _live_icon.PixelSize = 48;
+                _live_icon.Visible = true;
+                // 
                 _pionever.Visible = true;
                 _bypass_network++;
                 if (_bypass_network == 7){
@@ -246,25 +259,28 @@ namespace oobe
                 }
             }
             else if (_state == 1){
-                _button1.Visible = true;
-                _button2.Visible = true;
+                _label2.Text = "１．インターネットへの接続";
+                _button1.Visible = _button2.Visible = true;
                 _navigationbar.Visible = true;
                 _thum.Visible = true;
                 eulaview.Visible = false;
                 windoweulaview.Visible = false;
                 _infomationbar.Visible = false;
                 _label1.Text = "PioneOS のセットアップにはインターネット接続が必要です。\n無線 LAN の場合は画面左下のアイコンをクリックして接続先を選択します。\n有線 LAN の場合は接続してから左下のアイコンを確認します。";
-                _label2.Text = "１．インターネットへの接続";
                 _button1.Label = "接続を確認＞";
                 _button2.Label = "＜戻る";
                 _thum.File = "/usr/share/pioneos/oobe/Assets/network.png";
                 _pionever.Visible = false;
+                // アイコン設定
+                _live_icon.IconName = "internet-archive";
+                _live_icon.PixelSize = 48;
+                _live_icon.Visible = true;
+                // 
             }
             else if (_state == 2){
-                _navigationbar.Visible = false;
-                _thum.File = "/usr/share/pioneos/oobe/Assets/internet.png";
+                _button1.Visible = _button2.Visible = false;
                 _label1.Text = "インターネット接続を確認中です。\nしばらくお待ちください。";
-                await Task.Delay(100);
+                await Task.Delay(50);
                 try{
                     var connectcheck = new HttpClient();
                     await connectcheck.GetAsync("http://ospio.net");
@@ -280,28 +296,36 @@ namespace oobe
                 await setAsync(sender, a);
             }
             else if (_state == 3){
+                _button1.Visible = _button2.Visible = true;
+                _label2.Text = "２．エンドユーザー ライセンスの確認";
                 _navigationbar.Visible = false;
                 toggleswitch.Visible = false;
                 _label1.Text = "エンドユーザー ライセンスを読んで同意してください。\n同意しない場合は、PioneOS をご利用できません。";
-                _label2.Text = "２．エンドユーザー ライセンスの確認";
                 _thum.Visible = false;
                 eulaview.Visible = true;
                 _button1.Label = "同意＞";
                 _button2.Label = "＜拒否";
                 windoweulaview.Visible = true;
+                // アイコン設定
+                _live_icon.IconName = "notes";
+                _live_icon.PixelSize = 48;
+                _live_icon.Visible = true;
+                // 
                 try{
+                    if (eulaviewed == 0){
                     var connectcheck = new HttpClient();
                     var eulaget = await connectcheck.GetAsync("http://ospio.net/eula.txt");
                     if (eulaget.IsSuccessStatusCode == false){
                         throw new Exception("EULA の取得に失敗しました。");
                     }
+                    connectcheck.Dispose();
                     string eulakekka = await eulaget.Content.ReadAsStringAsync();
                     var tagLarge = new TextTag("large"){SizePoints = 17,Weight = Pango.Weight.Bold};
                     eulaview.Buffer.TagTable.Add(tagLarge);
                 //eulakekka の行数を取得
                     var iter = eulaview.Buffer.EndIter;
                     var lines = eulakekka.Split('\n');
-                if (eulaviewed == 0){
+                
                    foreach (var line in eulakekka.Split('\n'))
                     {
                      if (line.StartsWith("!")){
@@ -327,19 +351,25 @@ namespace oobe
                 }
             }
             else if (_state == 4){
+                _label2.Text = "３．Windows とのデュアルブート環境向けの設定";
                 _button1.Visible = true;
                 _button2.Visible = true;
                 toggleswitch.Visible = true;
+                _progresscircle.Visible = false;
                 toggleswitch.Label = "デュアルブート向け設定を適用する";
-                _thum.Visible = true;
+                _thum.Visible = false;
                 eulaview.Visible = false;
                 windoweulaview.Visible = false;
+                packagelistbox.Visible = false;
                 _label1.Text = "上のチェックを入れると、PioneOS と Windows をデュアルブートする環境向けに以下の設定を適用します。\n1. 時刻ズレを修正するためにシステム時刻をローカル時刻へセット\n2.Windows で再起動するアイコンを作成";
-                _label2.Text = "３．Windows とデュアルブートする環境向けの設定を使用しますか？";
                 _button1.Label = "次へ＞";
                 _button2.Label = "＜戻る";
-                _thum.IconName = "distributor-logo-windows";
-                _thum.PixelSize = 256;
+                _thum.PixelSize = 196;
+                // アイコン設定
+                _live_icon.IconName = "distributor-logo-windows";
+                _live_icon.PixelSize = 48;
+                _live_icon.Visible = true;
+                // 
                if (windowstimesync == true){
                    toggleswitch.Active = true;
                }
@@ -348,20 +378,106 @@ namespace oobe
               }
             }
             else if(_state == 5){
+                _label2.Text = "４．ソフトウェアの選択";
+                _button1.Visible = true;
+                _button2.Visible = true;
+                toggleswitch.Visible = false;
+                _thum.Visible = false;
+                _progresscircle.Visible = true;
+                eulaview.Visible = false;
+                windoweulaview.Visible = false;
+                _button1.Label = "次へ＞";
+                _button2.Label = "＜戻る";
+                _label1.Text = "ここでデフォルトで使用するソフトウェアを選択することができます。\nなお、ここに表示されるソフトウェアは後からでも手動でインストールできます。";
+                // アイコン設定
+                _live_icon.IconName = "downloader";
+                _live_icon.PixelSize = 48;
+                _live_icon.Visible = true;
+                // インストールするパッケージィの設定
+                if (packagelisted == false)
+                {
+                    texteditorcombo.AppendText("nano&vim");
+                    texteditorcombo.Active = 0;
+                    //Console.WriteLine("texteditorcombo is alive!");
+                    var connectcheck2 = new HttpClient();
+                    connectcheck2.Timeout = TimeSpan.FromSeconds(10);
+                    var texteditorlistget = await connectcheck2.GetAsync("https://store.ospio.net/texteditorlist.xml");
+                    if (texteditorlistget.IsSuccessStatusCode == true){
+                        string texteditorlist = await texteditorlistget.Content.ReadAsStringAsync();
+                        XDocument texteditorlistxml = XDocument.Parse(texteditorlist);
+                        texteditorlistroot = texteditorlistxml.Element("data");
+                        foreach (XElement textitem in texteditorlistroot.Elements("item"))
+                        {
+                            Console.WriteLine(textitem.Element("id").Value);
+                            texteditorcombo.AppendText(textitem.Element("name").Value);
+                        }
+                    }
+                    connectcheck2.Dispose();
+                    packagelisted = true;
+                }
+                _progresscircle.Visible = false;
+                texteditorcombo.Visible = true;
+                packagelistbox.Visible = true;
+            }
+            else if(_state == 6){
+                _label1.Text = "PioneOS を快適にご利用いただくための最終処理を行っています。\n自動で再起動するまでこのまましばらくお待ちください！";
                 _button1.Visible = false;
                 toggleswitch.Visible = false;
                 _button2.Visible = false;
                 _progress.Visible = true;
+                packagelistbox.Visible = false;          
                 _navigationbar.Visible = false;
                 _thum.Visible = true;
-                _label1.Text = "これで、初期設定が完了しました！\nPioneOS を快適にご利用いただくために\n最終処理を行っていますので\n再起動するまで絶対にデバイスに触れないでください！";
-                _label2.Text = "自動で再起動するまでお待ちください！";
+                // アイコン設定
+                _live_icon.IconName = "checkmark";
+                _live_icon.PixelSize = 48;
+                _live_icon.Visible = true;
+                // 
+                _label2.Text = "これで、初期設定が完了しました！";
                 var image = new Gdk.Pixbuf("/usr/share/pioneos/oobe/Assets/pioneos.png");
                 _thum.Pixbuf = image;
                 await Task.Run(() => StartProgressBarAnimation(_progress));
-            
+                //まずは apt-get update だな
+                var processInfo3 = new ProcessStartInfo
+                {
+                    FileName = "sudo",
+                    UseShellExecute = false,
+                    Arguments = "/usr/share/pioneos/oobe/apt-get.sh",
+                    RedirectStandardOutput = true
+                };
+                Process.Start(processInfo3);
+                //パッケージのインストール
+                if(texteditorcombo.Active == 0)
+                {
+                    Console.WriteLine("テキストエディタはデフォルトのままです");
+                }
+                else
+                {
+                    // 選択された ID からアイテムを取得し、install をインストール
+                    XElement installertext = texteditorlistroot.Elements("item").FirstOrDefault(item => (string)item.Element("id") == texteditorcombo.Active.ToString());
+                    if (installertext != null)
+                    {
+                        string packageinstall = installertext.Element("install").Value;
+                        string packageuninstall = installertext.Element("uninstall").Value;
+                        //インストール開始
+                        if(installertext.Element("howto").Value == "apt")
+                        {
+                            await Task.Delay(50);
+                            var processInfo_textedit = new ProcessStartInfo
+                            {
+                                FileName = "sudo",
+                                UseShellExecute = true,
+                                Arguments = "/usr/share/pioneos/oobe/instremo.sh" + " " + packageinstall + " " + packageuninstall
+                            };
+                            Process.Start(processInfo_textedit);
+                            Console.WriteLine(packageinstall + "をインストールしました。");
+                        }
+                    }
+                }
+            //時間同期など
             if (windowstimesync == true){
                 Console.WriteLine("windowstimesync.sh を実行します。");
+                await Task.Delay(50);
                 var processInfo_windowstimesync = new ProcessStartInfo
                 {
                     FileName = "sudo",
@@ -371,6 +487,7 @@ namespace oobe
                 };
                 Process.Start(processInfo_windowstimesync);
             }
+            //最終処理、ここでサヨナラ
             Console.WriteLine("fini2.sh を実行します。");
             var process2Info = new ProcessStartInfo
             {
@@ -380,6 +497,7 @@ namespace oobe
             };
             Console.WriteLine("fini.sh を実行します。");
             Process.Start(process2Info);
+            await Task.Delay(50);
             var processInfo = new ProcessStartInfo
             {
                 FileName = "sudo",
@@ -415,6 +533,22 @@ namespace oobe
                     });
                 }, null, 0, animationInterval);
             }
+        }
+        //Gtk から該当のハンドルを受け取ったら
+        private void settexteditor(object sender, EventArgs a)
+        {
+            if(texteditorcombo.Active != 0)
+            {
+                Console.WriteLine(texteditorcombo.Active + "番のテキストエディタが選択されました");
+                XElement installertext = texteditorlistroot.Elements("item").FirstOrDefault(item => (string)item.Element("id") == texteditorcombo.Active.ToString());
+                texteditoricon.IconName = installertext.Element("icon").Value;
+            }
+            else
+            {
+                texteditoricon.IconName = "mousepad";
+            }
+            
+
         }
     }
 }
