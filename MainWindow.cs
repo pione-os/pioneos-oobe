@@ -15,9 +15,12 @@ namespace oobe
         [UI] private Image _thum = null;
         [UI] private Image _live_icon = null;
         [UI] private Image texteditoricon = null;
+        [UI] private Image browsericon = null;
         [UI] private ProgressBar _progress = null;
         [UI] private Box packagelistbox = null;
         [UI] private ComboBoxText texteditorcombo = null;
+        [UI] private ComboBoxText browsercombo = null;
+
         [UI] private TextView eulaview = null;
         [UI] private ScrolledWindow windoweulaview = null;
         [UI] private CheckButton toggleswitch = null;
@@ -37,6 +40,8 @@ namespace oobe
         private int eulaviewed = 0;
         // インストールするパッケージの指定用変数
         private XElement texteditorlistroot = null!;
+        private XElement browserlistroot = null!;
+
         //
         public MainWindow() : this(new Builder("MainWindow.glade")) { }
         
@@ -235,13 +240,14 @@ namespace oobe
             Console.WriteLine(_state);
             if (_state == 0){
                 _label2.Text = "Welcome to PioneOS!";
-                _label1.Text = "このプロセスでは PioneOS  を設定するお手伝いをします。\n続けるには「次へ」をクリックしてください。";
+                _label1.Text = "このプロセスでは PioneOS を使う準備をします。\n続けるには「次へ」をクリックしてください。";
                 _thum.File = "/usr/share/pioneos/oobe/Assets/pioneos.png";
                 _infomationbar.Visible = true;
                 // アイコン設定
                 _live_icon.IconName = "face-smile";
                 _live_icon.PixelSize = 48;
                 _live_icon.Visible = true;
+                _button1.Sensitive = _button2.Sensitive = true;
                 // 
                 _pionever.Visible = true;
                 _bypass_network++;
@@ -258,7 +264,7 @@ namespace oobe
                 }
             }
             else if (_state == 1){
-                _label2.Text = "１．インターネットへの接続";
+                _label2.Text = "インターネットへの接続";
                 _button1.Visible = _button2.Visible = true;
                 _navigationbar.Visible = true;
                 _thum.Visible = true;
@@ -277,9 +283,8 @@ namespace oobe
                 // 
             }
             else if (_state == 2){
-                _button1.Visible = _button2.Visible = false;
+                _button1.Sensitive = _button2.Sensitive = false;
                 _label1.Text = "インターネット接続を確認中です。\nしばらくお待ちください。";
-                await Task.Delay(50);
                 try{
                     var connectcheck = new HttpClient();
                     await connectcheck.GetAsync("http://ospio.net");
@@ -295,13 +300,15 @@ namespace oobe
                 await setAsync(sender, a);
             }
             else if (_state == 3){
-                _button1.Visible = _button2.Visible = true;
-                _label2.Text = "２．エンドユーザー ライセンスの確認";
-                _navigationbar.Visible = false;
+                _button1.Sensitive = _button2.Sensitive = true;
+                _label2.Text = "エンドユーザー ライセンスの確認";
                 toggleswitch.Visible = false;
                 _label1.Text = "エンドユーザー ライセンスを読んで同意してください。\n同意しない場合は、PioneOS をご利用できません。";
                 _thum.Visible = false;
                 eulaview.Visible = true;
+                packagelistbox.Visible = false;
+                _progresscircle.Visible = false;
+                _button1.Sensitive = _button2.Sensitive = false;
                 _button1.Label = "同意＞";
                 _button2.Label = "＜拒否";
                 windoweulaview.Visible = true;
@@ -338,7 +345,7 @@ namespace oobe
                  }
                 //行数分ループ
                 }
-                _navigationbar.Visible = true;
+                _button1.Sensitive = _button2.Sensitive = true;
                 }
                 
                 catch (Exception e){
@@ -349,8 +356,65 @@ namespace oobe
                     await setAsync(sender, a);
                 }
             }
-            else if (_state == 4){
-                _label2.Text = "３．Windows とのデュアルブート環境向けの設定";
+            else if(_state == 4){
+                _label2.Text = "ソフトウェアの選択";
+                _button1.Visible = true;
+                _button2.Visible = true;
+                toggleswitch.Visible = false;
+                _thum.Visible = false;
+                eulaview.Visible = false;
+                windoweulaview.Visible = false;
+                _button1.Label = "次へ＞";
+                _button2.Label = "＜戻る";
+                _label1.Text = "ここでデフォルトで使用するソフトウェアを選択することができます。\nなお、ここに表示されるソフトウェアは後からでも手動でインストールできます。";
+                // アイコン設定
+                _live_icon.IconName = "downloader";
+                _live_icon.PixelSize = 48;
+                _live_icon.Visible = true;
+                _button1.Sensitive = _button2.Sensitive = false;
+                // インストールするパッケージィの設定
+                if (packagelisted == false)
+                {
+                    texteditorcombo.AppendText("nano&vim");
+                    texteditorcombo.Active = 0;
+                    browsercombo.AppendText("Chromium");
+                    browsercombo.Active = 0;
+                    //テキストエディタリスト
+                    var connectcheck2 = new HttpClient();
+                    try{
+                        _progresscircle.Visible = true;
+                        var texteditorlistget = await connectcheck2.GetAsync("http://ospio.net/packagelists/texteditorlist.xml");
+                        string texteditorlist = await texteditorlistget.Content.ReadAsStringAsync();
+                        XDocument texteditorlistxml = XDocument.Parse(texteditorlist);
+                        texteditorlistroot = texteditorlistxml.Element("data");
+                        foreach (XElement textitem in texteditorlistroot.Elements("item"))
+                        {
+                            Console.WriteLine(textitem.Element("id").Value);
+                            texteditorcombo.AppendText(textitem.Element("name").Value);
+                        }
+                        var browserlistget = await connectcheck2.GetAsync("http://ospio.net/packagelists/browserlist.xml");
+                        string browserlist = await browserlistget.Content.ReadAsStringAsync();
+                        XDocument browserlistxml = XDocument.Parse(browserlist);
+                        browserlistroot = browserlistxml.Element("data");
+                        foreach (XElement textitem in browserlistroot.Elements("item"))
+                        {
+                            Console.WriteLine(textitem.Element("id").Value);
+                            browsercombo.AppendText(textitem.Element("name").Value);
+                        }
+                        packagelistbox.Visible = true;
+                    }       
+                    catch{
+                        Console.WriteLine("package list error");
+                        }
+                    connectcheck2.Dispose();
+                    packagelisted = true;
+                }
+                _button1.Sensitive = _button2.Sensitive = true;
+                _progresscircle.Visible = false;
+                packagelistbox.Visible = true;
+            }
+            else if (_state == 5){
+                _label2.Text = "Windows とのデュアルブート環境向けの設定";
                 _button1.Visible = true;
                 _button2.Visible = true;
                 toggleswitch.Visible = true;
@@ -360,7 +424,7 @@ namespace oobe
                 eulaview.Visible = false;
                 windoweulaview.Visible = false;
                 packagelistbox.Visible = false;
-                _label1.Text = "上のチェックを入れると、PioneOS と Windows をデュアルブートする環境向けに以下の設定を適用します。\n1. 時刻ズレを修正するためにシステム時刻をローカル時刻へセット\n2.Windows で再起動するアイコンを作成";
+                _label1.Text = "このチェックを入れると、PioneOS と Windows をデュアルブートする環境向けに以下の設定を適用します。\n1. 時刻ズレを修正するためにシステム時刻をローカル時刻へセット\n2.Windows で再起動するアイコンを作成";
                 _button1.Label = "次へ＞";
                 _button2.Label = "＜戻る";
                 _thum.PixelSize = 196;
@@ -375,48 +439,6 @@ namespace oobe
               else{
                    toggleswitch.Active = false;
               }
-            }
-            else if(_state == 5){
-                _label2.Text = "４．ソフトウェアの選択";
-                _button1.Visible = true;
-                _button2.Visible = true;
-                toggleswitch.Visible = false;
-                _thum.Visible = false;
-                _progresscircle.Visible = true;
-                eulaview.Visible = false;
-                windoweulaview.Visible = false;
-                _button1.Label = "次へ＞";
-                _button2.Label = "＜戻る";
-                _label1.Text = "ここでデフォルトで使用するソフトウェアを選択することができます。\nなお、ここに表示されるソフトウェアは後からでも手動でインストールできます。";
-                // アイコン設定
-                _live_icon.IconName = "downloader";
-                _live_icon.PixelSize = 48;
-                _live_icon.Visible = true;
-                // インストールするパッケージィの設定
-                if (packagelisted == false)
-                {
-                    texteditorcombo.AppendText("nano&vim");
-                    texteditorcombo.Active = 0;
-                    //Console.WriteLine("texteditorcombo is alive!");
-                    var connectcheck2 = new HttpClient();
-                    connectcheck2.Timeout = TimeSpan.FromSeconds(10);
-                    var texteditorlistget = await connectcheck2.GetAsync("https://store.ospio.net/texteditorlist.xml");
-                    if (texteditorlistget.IsSuccessStatusCode == true){
-                        string texteditorlist = await texteditorlistget.Content.ReadAsStringAsync();
-                        XDocument texteditorlistxml = XDocument.Parse(texteditorlist);
-                        texteditorlistroot = texteditorlistxml.Element("data");
-                        foreach (XElement textitem in texteditorlistroot.Elements("item"))
-                        {
-                            Console.WriteLine(textitem.Element("id").Value);
-                            texteditorcombo.AppendText(textitem.Element("name").Value);
-                        }
-                    }
-                    connectcheck2.Dispose();
-                    packagelisted = true;
-                }
-                _progresscircle.Visible = false;
-                texteditorcombo.Visible = true;
-                packagelistbox.Visible = true;
             }
             else if(_state == 6){
                 _label1.Text = "PioneOS を快適にご利用いただくための最終処理を行っています。\n自動で再起動するまでこのまましばらくお待ちください！";
@@ -470,10 +492,51 @@ namespace oobe
                             {
                                 FileName = "sudo",
                                 UseShellExecute = true,
-                                Arguments = "/usr/share/pioneos/oobe/instremo.sh" + " " + packageinstall + " " + packageuninstall
+                                Arguments = "/usr/share/pioneos/oobe/texteditor.sh" + " " + packageinstall + " " + packageuninstall
                             };
-                            _pionever.Text = "進捗状況：必要なパッケージのインストール中...";
+                            _pionever.Text = "進捗状況：テキストブラウザのインストール中...";
                             using (Process pwatch = Process.Start(processInfo_textedit)){if (pwatch != null){await pwatch.WaitForExitAsync();}}
+                            Console.WriteLine(packageinstall + "をインストールしました。");
+                        }
+                    }
+                }
+            //ブラウザをインストール
+               if(browsercombo.Active == 0)
+                {
+                    Console.WriteLine("ブラウザはデフォルトのままです");
+                }
+                else
+                {
+                    // 選択された ID からアイテムを取得し、install をインストール
+                    XElement installerbrowser = browserlistroot.Elements("item").FirstOrDefault(item => (string)item.Element("id") == browsercombo.Active.ToString());
+                    string packageinstall = installerbrowser.Element("install").Value;
+                    string packageuninstall = installerbrowser.Element("uninstall").Value;
+                    string packagehowto = installerbrowser.Element("howto").Value;
+                    string packagegpg = "";
+                    string packagerepo = "";
+                    string packagemanage = "";
+                    if (installerbrowser != null)
+                    {
+                        if (packagehowto == "dpkg"){
+                            packagegpg = installerbrowser.Element("url").Value;
+                        }
+                        else{
+                            packagerepo = installerbrowser.Element("repo").Value;
+                            packagegpg = installerbrowser.Element("gpg").Value;
+                            packagemanage = installerbrowser.Element("manage").Value;
+                        }
+                        //インストール開始
+                        if(installerbrowser.Element("howto").Value == "apt")
+                        {
+                            await Task.Delay(50);
+                            var processInfo_browser = new ProcessStartInfo
+                            {
+                                FileName = "sudo",
+                                UseShellExecute = true,
+                                Arguments = "/usr/share/pioneos/oobe/browser.sh" + " " + packageinstall + " " + packageuninstall + " " + packagehowto + " " + packagegpg + " " + packagerepo + " " + packagemanage
+                            };
+                            _pionever.Text = "進捗状況：Web ブラウザのインストール中...";
+                            using (Process pwatch = Process.Start(processInfo_browser)){if (pwatch != null){await pwatch.WaitForExitAsync();}}
                             Console.WriteLine(packageinstall + "をインストールしました。");
                         }
                     }
@@ -482,7 +545,6 @@ namespace oobe
             _pionever.Text = "進捗状況：設定の最適化中...";
             if (windowstimesync == true){
                 Console.WriteLine("windowstimesync.sh を実行します。");
-                await Task.Delay(50);
                 var processInfo_windowstimesync = new ProcessStartInfo
                 {
                     FileName = "sudo",
@@ -502,7 +564,7 @@ namespace oobe
             };
             Console.WriteLine("fini.sh を実行します。");
             using (Process pwatch = Process.Start(process2Info)){if (pwatch != null){await pwatch.WaitForExitAsync();}}
-            await Task.Delay(50);
+            await Task.Delay(10);
             var processInfo = new ProcessStartInfo
             {
                 FileName = "sudo",
@@ -553,7 +615,20 @@ namespace oobe
                 texteditoricon.IconName = "mousepad";
             }
             
-
+        }
+        private void setbrowser(object sender, EventArgs a)
+        {
+            if(browsercombo.Active != 0)
+            {
+                Console.WriteLine(browsercombo.Active + "番のブラウザが選択されました");
+                XElement installertext = browserlistroot.Elements("item").FirstOrDefault(item => (string)item.Element("id") == browsercombo.Active.ToString());
+                browsericon.IconName = installertext.Element("icon").Value;
+            }
+            else
+            {
+                browsericon.IconName = "chromium";
+            }
+            
         }
     }
 }
